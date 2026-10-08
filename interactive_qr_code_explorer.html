@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Architecture & Global Impact of Quick Response (QR) Codes</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- QRCode.js CDN for reliable smartphone scanning -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* Embedded custom CSS for responsive chart constraints and custom controls */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 380px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-btn.active {
+            border-bottom-color: #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        /* Custom scrollbar for data tables */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        #phoneQrCode img {
+            margin: 0 auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Chosen Palette: Modern Slate & Warm Amber -->
+    <!-- Application Structure Plan: The SPA is structured into seven interactive thematic modules: 
+         1) Core Overview & Interactive Anatomy Explorer: Introduces the 1994 invention by Masahiro Hara, the 1:1:3:1:1 golden ratio, and an interactive clickable canvas breakdown of QR structural elements.
+         2) Characteristics & Encoding Modes: Interactive capacity comparison charts, version metrics (V1 to V40), and Reed-Solomon Error Correction levels (L, M, Q, H).
+         3) Mathematics & Encoding Mechanics: Step-by-step pipeline visualizer (Galois Field GF(2^8), polynomial division, 8 masking patterns, and Penalty N1-N4 scoring).
+         4) Macroeconomic Impact & Ecosystems: Dynamic vs Static architecture comparison, India's UPI payments growth visualization, and GS1 Digital Link supply chain transition.
+         5) Specialized Variants, Security (Quishing) & AI Frontiers: SQRC, Micro QR, iQR, Frame QR, quishing threat metrics (PDF obfuscation, EDR bypass), and AI Diffusion QR generation.
+         6) Dynamic QR Matrix Sandbox: An interactive HTML5 Canvas simulator where users can customize text payload, error correction, and mask patterns to see real-time matrix bit generation.
+         7) Smartphone Access & Web Deployment Hub: A dedicated suite that creates a live scannable QR code for any deployed URL so users can scan and access this app on any smartphone. -->
+    <!-- Visualization & Content Choices: 
+         - Interactive Anatomy Canvas -> Canvas + JS highlight -> Allows users to click structural regions (Finder, Timing, Format, Quiet Zone) to view technical specs.
+         - Encoding Capacity Chart -> Chart.js Bar Chart -> Displays data limits across 4 modes (Numeric, Alphanumeric, Byte, Kanji).
+         - Error Correction vs Capacity Tradeoff -> Chart.js Radar/Bar -> Compares EC Levels (L, M, Q, H) and explains GF(2^8) math.
+         - UPI Transaction Growth -> Chart.js Line & Donut Chart -> Demonstrates macroeconomic scale (241.62B transactions, market share).
+         - Quishing Threat Metrics -> Chart.js Pie/Bar Chart -> Visualizes security escalation (587% surge, PDF attacks, credential theft).
+         - Dynamic QR Matrix Sandbox -> HTML5 Canvas + Vanilla JS -> Renders a live 21x21 QR matrix with real-time mask XOR transforms and EC customization.
+         - Smartphone Scanner Engine -> QRCode.js Library -> Renders standard ISO 18004 scannable QR matrix compatible with iOS Camera & Android QR Scanner.
+         - Confirming: NO SVG graphics, NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center py-3">
+            <div class="flex items-center space-x-3 mb-2 md:mb-0">
+                <div class="w-8 h-8 bg-amber-500 rounded-md flex items-center justify-center text-slate-900 font-black text-xl shadow">
+                    QR
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white leading-tight">Quick Response (QR) Code Architecture</h1>
+                    <p class="text-xs text-slate-400">Interactive Research & Technical Intelligence Portal</p>
+                </div>
+            </div>
+            
+            <nav class="flex space-x-1 sm:space-x-2 text-xs sm:text-sm font-medium overflow-x-auto w-full md:w-auto py-1 custom-scrollbar">
+                <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-3 py-2 rounded-t-md text-slate-300 hover:text-white hover:bg-slate-800 transition active">Overview & Anatomy</button>
+                <button onclick="switchTab('characteristics')" id="tab-characteristics" class="tab-btn px-3 py-2 rounded-t-md text-slate-300 hover:text-white hover:bg-slate-800 transition">Characteristics & Capacity</button>
+                <button onclick="switchTab('working')" id="tab-working" class="tab-btn px-3 py-2 rounded-t-md text-slate-300 hover:text-white hover:bg-slate-800 transition">How It Works (Math)</button>
+                <button onclick="switchTab('macroeconomics')" id="tab-macroeconomics" class="tab-btn px-3 py-2 rounded-t-md text-slate-300 hover:text-white hover:bg-slate-800 transition">Global Impact & Fintech</button>
+                <button onclick="switchTab('security')" id="tab-security" class="tab-btn px-3 py-2 rounded-t-md text-slate-300 hover:text-white hover:bg-slate-800 transition">Security & AI Frontiers</button>
+                <button onclick="switchTab('sandbox')" id="tab-sandbox" class="tab-btn px-3 py-2 rounded-t-md text-amber-400 hover:text-amber-300 hover:bg-slate-800 transition font-bold">Interactive Sandbox</button>
+                <button onclick="switchTab('deploy')" id="tab-deploy" class="tab-btn px-3 py-2 rounded-t-md text-emerald-400 hover:text-emerald-300 hover:bg-slate-800 transition font-bold">📱 Scan on Phone</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- ================= SECTION 1: OVERVIEW & ANATOMY ================= -->
+        <section id="sec-overview" class="tab-content space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">1. Introduction, History & Geometric Anatomy</h2>
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed">
+                    This module explores the historical genesis of the Quick Response (QR) code in 1994, its breakthrough position detection geometry, and its distinct structural regions governed by ISO/IEC 18004. Invented by Masahiro Hara at Denso Wave to resolve automotive assembly bottlenecks, the code was intentionally released into the public domain—a decision that turned an industrial tracking tool into a global digital utility. Click on the structural components in the interactive diagram below to explore their specific engineering functions.
+                </p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-blue-600">
+                    <span class="text-xs text-slate-500 uppercase font-semibold">Invention Year</span>
+                    <div class="text-2xl font-bold text-slate-900">1994</div>
+                    <span class="text-xs text-slate-600">By Masahiro Hara (Denso Wave)</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                    <span class="text-xs text-slate-500 uppercase font-semibold">Finder Ratio</span>
+                    <div class="text-2xl font-bold text-slate-900">1:1:3:1:1</div>
+                    <span class="text-xs text-slate-600">Golden ratio for optical detection</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                    <span class="text-xs text-slate-500 uppercase font-semibold">Patent Status</span>
+                    <div class="text-2xl font-bold text-slate-900">Public Domain</div>
+                    <span class="text-xs text-slate-600">Unrestricted global adoption</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-purple-500">
+                    <span class="text-xs text-slate-500 uppercase font-semibold">World QR Day</span>
+                    <div class="text-2xl font-bold text-slate-900">August 8</div>
+                    <span class="text-xs text-slate-600">Honoring inventor's birthday</span>
+                </div>
+            </div>
+
+            <!-- Interactive Anatomy Explorer -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Anatomy Canvas Display -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4 self-start">Interactive Structural Map (Version 2 Model)</h3>
+                    <div class="relative bg-slate-100 p-4 rounded-lg border border-slate-300 shadow-inner flex justify-center items-center w-full">
+                        <canvas id="anatomyCanvas" width="300" height="300" class="cursor-pointer max-w-full rounded bg-white shadow-sm"></canvas>
+                    </div>
+                    <div class="mt-4 text-xs text-slate-500 text-center">
+                        Click on any highlighted region in the code above (Finder Patterns, Alignment, Timing, Format Info, Quiet Zone) to view technical specifications.
+                    </div>
+                </div>
+
+                <!-- Detail Panel -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between min-h-[380px]">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-3">
+                            <span id="anatomyBadge" class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded">Position Detection Pattern</span>
+                            <span id="anatomyTitle" class="text-xl font-bold text-slate-900">Finder Patterns</span>
+                        </div>
+                        <p id="anatomyDescription" class="text-slate-600 text-sm leading-relaxed mb-6">
+                            Located at three corners (top-left, top-right, bottom-left), each pattern consists of a 7x7 grid with an inner 3x3 black square, a 1-module white separator, and a 1-module black outer border. When scanned from any angle (0-360 degrees), the scanner detects the unique 1:1:3:1:1 module ratio, allowing sub-millisecond orientation and tilt normalization.
+                        </p>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs space-y-2">
+                            <div class="flex justify-between"><span class="font-semibold text-slate-700">Grid Dimensions:</span> <span id="anatomyDimensions" class="text-slate-900 font-mono">7x7 modules per corner</span></div>
+                            <div class="flex justify-between"><span class="font-semibold text-slate-700">Scan Invariance:</span> <span id="anatomyInvariance" class="text-slate-900 font-mono">360-degree rotational tolerance</span></div>
+                            <div class="flex justify-between"><span class="font-semibold text-slate-700">Primary Function:</span> <span id="anatomyFunction" class="text-slate-900">Instant position, size, and tilt alignment</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Origin Story Highlight Box -->
+                    <div class="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4 text-xs text-amber-900">
+                        <strong class="font-bold text-amber-800">The Skyscraper & Beer Discovery:</strong> Masahiro Hara deduced his optimal brainwave state occurred after drinking two glasses of beer on a train commute. While viewing skyscraper window arrangements, he noticed the structural pattern that initiated six months of computational research to isolate the 1:1:3:1:1 position ratio.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: CHARACTERISTICS & CAPACITY ================= -->
+        <section id="sec-characteristics" class="tab-content hidden space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">2. Characteristics, Matrix Versions & Encoding Modes</h2>
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed">
+                    The ISO/IEC 18004 standard defines 40 discrete matrix versions, scaling quadratically from Version 1 (21x21 modules) up to Version 40 (177x177 modules). Data density varies dynamically depending on the selected encoding mode (Numeric, Alphanumeric, Byte, or Kanji) and the designated Reed-Solomon Error Correction Level. Explore the comparative charts and interactive mode metrics below.
+                </p>
+            </div>
+
+            <!-- Capacity Chart & Control Panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Chart Container -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-slate-900">Data Storage Capacity Across Matrix Versions</h3>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">Error Correction: Level L (7%)</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="capacityChart"></canvas>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4">
+                        *Note: Version 40 operating at Level L can hold up to 7,089 numeric digits or 2,953 raw bytes (~2.9 KB)—sufficient capacity to hold executable game binaries or cryptographic certificates.
+                    </p>
+                </div>
+
+                <!-- Encoding Modes Explainer Card -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-2">The Four ISO Encoding Modes</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="flex justify-between items-center font-bold text-blue-900 text-sm">
+                                <span>Numeric Mode</span>
+                                <span class="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded">~3.33 bits/char</span>
+                            </div>
+                            <p class="text-xs text-blue-800 mt-1">Digits 0-9 only. Groups digits into triplets packed into 10-bit binary sequences. Max: 7,089 chars (V40-L).</p>
+                        </div>
+
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                            <div class="flex justify-between items-center font-bold text-emerald-900 text-sm">
+                                <span>Alphanumeric Mode</span>
+                                <span class="text-xs bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded">5.5 bits/char</span>
+                            </div>
+                            <p class="text-xs text-emerald-800 mt-1">Digits 0-9, uppercase A-Z, space, and 8 symbols ($ % * + - . / :). Groups character pairs into 11-bit strings. Max: 4,296 chars.</p>
+                        </div>
+
+                        <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                            <div class="flex justify-between items-center font-bold text-purple-900 text-sm">
+                                <span>Byte / Binary Mode</span>
+                                <span class="text-xs bg-purple-200 text-purple-800 px-2 py-0.5 rounded">8.0 bits/byte</span>
+                            </div>
+                            <p class="text-xs text-purple-800 mt-1">ISO/IEC 8859-1 or UTF-8 text, web URLs, and arbitrary binary payloads. Encodes directly as 8-bit bytes. Max: 2,953 bytes.</p>
+                        </div>
+
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div class="flex justify-between items-center font-bold text-amber-900 text-sm">
+                                <span>Kanji Mode</span>
+                                <span class="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">13.0 bits/char</span>
+                            </div>
+                            <p class="text-xs text-amber-800 mt-1">Optimized for Japanese Shift JIS double-byte characters. Compresses 2-byte values into 13-bit values. Max: 1,817 chars.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Correction Levels Interactive Grid -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-lg font-semibold text-slate-900">Reed-Solomon Error Correction Levels (ISO/IEC 18004)</h3>
+                <p class="text-sm text-slate-600">
+                    QR codes use Galois Field GF(2^8) arithmetic to enable mathematical reconstruction of damaged, smeared, or covered modules. Higher error correction levels trade data capacity for optical durability.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="border border-slate-200 p-4 rounded-lg bg-slate-50 text-center hover:border-blue-500 transition">
+                        <div class="text-2xl font-black text-blue-600">Level L</div>
+                        <div class="text-xs uppercase font-bold text-slate-500 mb-2">Low Recovery</div>
+                        <div class="text-3xl font-extrabold text-slate-900">7%</div>
+                        <p class="text-xs text-slate-600 mt-2">Maximized storage space. Used on clean digital displays or pristine printed media.</p>
+                    </div>
+                    <div class="border border-slate-200 p-4 rounded-lg bg-slate-50 text-center hover:border-emerald-500 transition">
+                        <div class="text-2xl font-black text-emerald-600">Level M</div>
+                        <div class="text-xs uppercase font-bold text-slate-500 mb-2">Medium (Default)</div>
+                        <div class="text-3xl font-extrabold text-slate-900">15%</div>
+                        <p class="text-xs text-slate-600 mt-2">Standard commercial benchmark. Optimal balance for retail packaging & marketing.</p>
+                    </div>
+                    <div class="border border-slate-200 p-4 rounded-lg bg-slate-50 text-center hover:border-amber-500 transition">
+                        <div class="text-2xl font-black text-amber-600">Level Q</div>
+                        <div class="text-xs uppercase font-bold text-slate-500 mb-2">Quartile Recovery</div>
+                        <div class="text-3xl font-extrabold text-slate-900">25%</div>
+                        <p class="text-xs text-slate-600 mt-2">High durability for factory floors, outdoor signage, or dirty operational areas.</p>
+                    </div>
+                    <div class="border border-slate-200 p-4 rounded-lg bg-slate-50 text-center hover:border-purple-500 transition">
+                        <div class="text-2xl font-black text-purple-600">Level H</div>
+                        <div class="text-xs uppercase font-bold text-slate-500 mb-2">High Recovery</div>
+                        <div class="text-3xl font-extrabold text-slate-900">30%</div>
+                        <p class="text-xs text-slate-600 mt-2">Maximum resilience. Required when embedding visual brand logos over matrix centers.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: HOW IT WORKS (MATH & MASKING) ================= -->
+        <section id="sec-working" class="tab-content hidden space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">3. Mathematical Mechanics & Pipeline Architecture</h2>
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed">
+                    Generating a QR code requires converting data into binary bitstreams, generating Reed-Solomon parity codewords over the finite Galois field GF(2^8), and evaluating eight distinct optical mask patterns to prevent false scanner synchronization. This section details the complete mathematical workflow and dynamic penalty scoring algorithm.
+                </p>
+            </div>
+
+            <!-- Pipeline Diagram (HTML/CSS Based) -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="text-lg font-semibold text-slate-900 mb-4">The 6-Step QR Generation Pipeline</h3>
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-2 text-center text-xs font-semibold">
+                    <div class="bg-blue-50 text-blue-900 p-3 rounded-lg border border-blue-200 flex flex-col justify-between">
+                        <span class="text-blue-500 font-bold mb-1">STEP 1</span>
+                        <span>Mode Analysis</span>
+                        <span class="text-[10px] font-normal text-blue-700 mt-2">Select best mode & 4-bit indicator</span>
+                    </div>
+                    <div class="bg-blue-50 text-blue-900 p-3 rounded-lg border border-blue-200 flex flex-col justify-between">
+                        <span class="text-blue-500 font-bold mb-1">STEP 2</span>
+                        <span>Bitstream Construction</span>
+                        <span class="text-[10px] font-normal text-blue-700 mt-2">Add character length & payload bits</span>
+                    </div>
+                    <div class="bg-blue-50 text-blue-900 p-3 rounded-lg border border-blue-200 flex flex-col justify-between">
+                        <span class="text-blue-500 font-bold mb-1">STEP 3</span>
+                        <span>Terminator & Padding</span>
+                        <span class="text-[10px] font-normal text-blue-700 mt-2">Append '0000' & pad 11101100 / 00010001</span>
+                    </div>
+                    <div class="bg-amber-50 text-amber-900 p-3 rounded-lg border border-amber-200 flex flex-col justify-between">
+                        <span class="text-amber-600 font-bold mb-1">STEP 4</span>
+                        <span>Reed-Solomon RS Engine</span>
+                        <span class="text-[10px] font-normal text-amber-800 mt-2">Polynomial division over GF(2^8)</span>
+                    </div>
+                    <div class="bg-amber-50 text-amber-900 p-3 rounded-lg border border-amber-200 flex flex-col justify-between">
+                        <span class="text-amber-600 font-bold mb-1">STEP 5</span>
+                        <span>Data Masking (0-7)</span>
+                        <span class="text-[10px] font-normal text-amber-800 mt-2">Apply XOR formulas to data modules</span>
+                    </div>
+                    <div class="bg-emerald-50 text-emerald-900 p-3 rounded-lg border border-emerald-200 flex flex-col justify-between">
+                        <span class="text-emerald-600 font-bold mb-1">STEP 6</span>
+                        <span>Penalty Evaluation</span>
+                        <span class="text-[10px] font-normal text-emerald-800 mt-2">Select lowest score N1-N4 candidate</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mathematical Deep Dive & Masking Table -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Galois Field Details -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-semibold text-slate-900">Galois Field GF(2^8) Mathematics</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        In QR error correction, byte arithmetic occurs within a finite field containing exactly 256 elements (2^8), mapping directly to 8-bit bytes (values 0–255).
+                    </p>
+                    <div class="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-xs space-y-2">
+                        <div class="text-amber-400 font-bold">// Primitive Polynomial for QR Standard:</div>
+                        <div>p(x) = x⁸ + x⁴ + x³ + x² + 1</div>
+                        <div class="text-slate-400 mt-2">// Field Addition / Subtraction:</div>
+                        <div>Executed via bitwise Exclusive-OR (XOR) modulo 2</div>
+                        <div class="text-slate-400 mt-2">// Character Byte Polynomial Example ('M' = ASCII 77 = 01001101):</div>
+                        <div>Polynomial: α⁶ + α³ + α² + 1</div>
+                    </div>
+                    <p class="text-xs text-slate-600">
+                        The raw bitstream is multiplied by x^n and divided by a pre-calculated generator polynomial. The remainder constitutes the parity codewords appended to the QR message payload.
+                    </p>
+                </div>
+
+                <!-- Data Masking Formulas Table -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <h3 class="text-lg font-semibold text-slate-900">The 8 ISO Data Masking Patterns</h3>
+                    <p class="text-xs text-slate-600">
+                        To prevent false finder patterns or large clusters of solid black/white squares, 8 mathematical masks toggle module colors at coordinates (i, j) using XOR operations.
+                    </p>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-xs text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700">
+                                    <th class="p-2 border border-slate-200">ID</th>
+                                    <th class="p-2 border border-slate-200">Mathematical Condition</th>
+                                    <th class="p-2 border border-slate-200">Optical Visual Pattern</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr><td class="p-2 border font-bold">0</td><td class="p-2 border font-mono">(i + j) mod 2 == 0</td><td class="p-2 border">Checkered chessboard</td></tr>
+                                <tr><td class="p-2 border font-bold">1</td><td class="p-2 border font-mono">i mod 2 == 0</td><td class="p-2 border">Horizontal alternating stripes</td></tr>
+                                <tr><td class="p-2 border font-bold">2</td><td class="p-2 border font-mono">j mod 3 == 0</td><td class="p-2 border">Vertical alternating stripes</td></tr>
+                                <tr><td class="p-2 border font-bold">3</td><td class="p-2 border font-mono">(i + j) mod 3 == 0</td><td class="p-2 border">Diagonal stripes</td></tr>
+                                <tr><td class="p-2 border font-bold">4</td><td class="p-2 border font-mono">(floor(i/2) + floor(j/3)) mod 2 == 0</td><td class="p-2 border">Block grid pattern</td></tr>
+                                <tr><td class="p-2 border font-bold">5</td><td class="p-2 border font-mono">(i*j) mod 2 + (i*j) mod 3 == 0</td><td class="p-2 border">Complex crisscross</td></tr>
+                                <tr><td class="p-2 border font-bold">6</td><td class="p-2 border font-mono">(((i*j) mod 2) + ((i*j) mod 3)) mod 2 == 0</td><td class="p-2 border">Diamond pattern</td></tr>
+                                <tr><td class="p-2 border font-bold">7</td><td class="p-2 border font-mono">(((i+j) mod 2) + ((i*j) mod 3)) mod 2 == 0</td><td class="p-2 border">Interleaved diagonal</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Penalty Scoring Engine (N1-N4) -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-lg font-semibold text-slate-900">Dynamic Penalty Scoring System (N1 to N4 Rules)</h3>
+                <p class="text-xs text-slate-600">
+                    The encoder creates 8 candidate matrices by applying all 8 masks. Each candidate is evaluated against 4 strict optical penalty rules. The candidate matrix with the absolute lowest cumulative penalty score is chosen.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div class="font-bold text-red-900 mb-1">Penalty N1: Consecutive Runs</div>
+                        <p class="text-red-800">Penalizes runs of 5 or more identical modules in a row/column. 3 pts for 5 modules + 1 pt per extra module.</p>
+                    </div>
+                    <div class="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div class="font-bold text-orange-900 mb-1">Penalty N2: Module Blocks</div>
+                        <p class="text-orange-800">Applies 3 points for every 2x2 block of identically colored modules to prevent visual clumps.</p>
+                    </div>
+                    <div class="p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                        <div class="font-bold text-rose-900 mb-1">Penalty N3: False Finders</div>
+                        <p class="text-rose-800">Severe 40-point penalty if a 1:1:3:1:1 pattern appears in data area, threatening scanner sync.</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <div class="font-bold text-slate-900 mb-1">Penalty N4: Dark/Light Balance</div>
+                        <p class="text-slate-800">Penalizes matrices if total dark module proportion deviates significantly from an ideal 50% balance.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: MACROECONOMIC IMPACT & FINTECH ================= -->
+        <section id="sec-macroeconomics" class="tab-content hidden space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">4. Macroeconomic Impact, Global Fintech & Routing Architectures</h2>
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed">
+                    The QR code has become a primary driver of real-time macroeconomic transactions and supply chain modernization worldwide. In India, the Unified Payments Interface (UPI) processes tens of billions of transactions monthly via storefront QR codes. Simultaneously, global retail is transitioning from legacy UPC/EAN barcodes to GS1 Digital Link QR codes.
+                </p>
+            </div>
+
+            <!-- Static vs Dynamic Routing Architecture Comparison -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Static Card -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3 border-t-4 border-t-slate-600">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900">Static Routing Architecture</h3>
+                        <span class="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded font-mono">Immutable</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Encodes final destination payload directly into the visual matrix. Highly decentralized and permanent.
+                    </p>
+                    <ul class="text-xs text-slate-700 space-y-2 list-disc list-inside">
+                        <li><strong>No Server Intermediary:</strong> Decodes offline without internet connection (vCards, raw text, Wi-Fi keys).</li>
+                        <li><strong>Zero Ongoing Fees:</strong> No link rot or service provider dependency.</li>
+                        <li><strong>Inflexible Payload:</strong> Once printed, the encoded data can NEVER be modified.</li>
+                        <li><strong>Density Scaling:</strong> Longer URLs create dense, fine-grained matrices harder to scan.</li>
+                    </ul>
+                </div>
+
+                <!-- Dynamic Card -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3 border-t-4 border-t-blue-600">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900">Dynamic Routing Architecture</h3>
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-mono">Redirect Server</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Encodes a short routing URL (e.g., <code class="bg-slate-100 px-1 py-0.5 rounded">https://qr.link/a1b2</code>) pointing to an intermediary redirect server.
+                    </p>
+                    <ul class="text-xs text-slate-700 space-y-2 list-disc list-inside">
+                        <li><strong>Editable Targets:</strong> Change destination URL instantly without reprinting physical codes.</li>
+                        <li><strong>Telemetry & Analytics:</strong> Logs scan time, device OS, browser, and approximate geo-location.</li>
+                        <li><strong>Sparse Matrix:</strong> Short URLs keep matrix size small (Version 2-3), ensuring fast scanning.</li>
+                        <li><strong>Dependency Risk:</strong> Service provider outage or domain lapse breaks physical codes.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Fintech Highlight: India UPI Data -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- UPI Volume Growth Chart -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-900">India UPI Transaction Explosion (FY 2016–2026)</h3>
+                                <p class="text-xs text-slate-500">Compound Annual Growth Rate (CAGR) of 188% driven by QR acceptance</p>
+                            </div>
+                            <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded">241.6B Volume</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="upiChart"></canvas>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4">
+                        By July 2026, UPI hit a record high of 23.66 billion monthly transactions (~763 million transactions per day), with cumulative transaction value exceeding ₹314 Lakh Crore.
+                    </p>
+                </div>
+
+                <!-- Fintech Metrics & App Market Share -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4">UPI Provider Market Share & Micro-Payments</h3>
+                        <div class="chart-container" style="height: 220px; max-height: 240px;">
+                            <canvas id="upiShareChart"></canvas>
+                        </div>
+                        <div class="mt-4 text-xs text-slate-600 space-y-2">
+                            <div class="p-2 bg-slate-50 rounded border border-slate-200 flex justify-between">
+                                <span>Person-to-Person (P2P) Ratio:</span>
+                                <span class="font-bold text-slate-900">54%</span>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded border border-slate-200 flex justify-between">
+                                <span>Person-to-Merchant (P2M) Ratio:</span>
+                                <span class="font-bold text-slate-900">46% (QR Storefront)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GS1 Digital Link Modernization -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center font-bold text-xl">GS1</div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Supply Chain Revolution: GS1 Digital Link Standard</h3>
+                        <p class="text-xs text-slate-500">Replacing 50-year-old linear UPC/EAN barcodes on retail consumer goods</p>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    The GS1 Digital Link embeds the Global Trade Item Number (GTIN) inside a standardized web URL QR code. The key innovation is <strong>context-aware routing</strong>: a single printed QR code serves three distinct audiences based on scan software context:
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                        <strong class="font-bold text-indigo-900 block mb-1">1. Cashier POS System</strong>
+                        <p class="text-indigo-800">Extracts GTIN solely for automated checkout and inventory price lookup.</p>
+                    </div>
+                    <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                        <strong class="font-bold text-indigo-900 block mb-1">2. Logistics & Warehouse Robots</strong>
+                        <p class="text-indigo-800">Extracts serial numbers, batch codes, and expiration dates for real-time traceability.</p>
+                    </div>
+                    <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                        <strong class="font-bold text-indigo-900 block mb-1">3. Consumer Smartphone</strong>
+                        <p class="text-indigo-800">Routes user to web pages with nutritional facts, allergen warnings, sustainability metrics, and loyalty rewards.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 5: SECURITY & AI FRONTIERS ================= -->
+        <section id="sec-security" class="tab-content hidden space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">5. Specialized Variants, Cybersecurity (Quishing) & AI Frontiers</h2>
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed">
+                    As QR codes become critical infrastructure, they encounter both specialized industrial evolutions (SQRC, Micro QR, iQR, Frame QR) and severe security threats like "Quishing" (QR code phishing). Concurrently, generative AI diffusion models are reimagining QR code visual aesthetics.
+                </p>
+            </div>
+
+            <!-- Specialized Architectural Variants -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-500 transition">
+                    <span class="text-xs bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">Micro QR</span>
+                    <h3 class="text-base font-bold text-slate-900 mt-2">Space Constrained</h3>
+                    <p class="text-xs text-slate-600 mt-1">Uses a single finder pattern instead of three. Ideal for tiny circuit boards. Max: 35 numeric characters.</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-purple-500 transition">
+                    <span class="text-xs bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded">iQR Code</span>
+                    <h3 class="text-base font-bold text-slate-900 mt-2">Rectangular Matrix</h3>
+                    <p class="text-xs text-slate-600 mt-1">Can be generated as long rectangular strips to wrap around test tubes, cylindrical objects, or thin tags.</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-amber-500 transition">
+                    <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">SQRC (Secure QR)</span>
+                    <h3 class="text-base font-bold text-slate-900 mt-2">Dual Layer Vault</h3>
+                    <p class="text-xs text-slate-600 mt-1">Features public data and encrypted private data layers. Standard readers see only public data; key unlocks private data.</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-500 transition">
+                    <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Frame QR</span>
+                    <h3 class="text-base font-bold text-slate-900 mt-2">Native Canvas</h3>
+                    <p class="text-xs text-slate-600 mt-1">Defines a clear canvas space inside matrix, routing data around it without wasting Reed-Solomon error capacity.</p>
+                </div>
+            </div>
+
+            <!-- Cybersecurity Threat Landscape: Quishing -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Quishing Chart -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900">The Surge of QR Phishing ("Quishing")</h3>
+                                <p class="text-xs text-slate-500">Microsoft Threat Intelligence: March 2026 Monthly Incident Surge</p>
+                            </div>
+                            <span class="text-xs bg-red-100 text-red-800 font-bold px-2.5 py-1 rounded">18.7M Attacks</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="quishingChart"></canvas>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4">
+                        Quishing incidents grew 587% in 2023 and became the fastest-growing enterprise attack vector in 2026. Attackers leverage optical payloads to bypass traditional Secure Email Gateways (SEGs).
+                    </p>
+                </div>
+
+                <!-- Tactical Breakdown Card -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900">Quishing Attack Vectors & Evasion Techniques</h3>
+                    
+                    <div class="space-y-3 text-xs">
+                        <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <strong class="font-bold text-red-900 block mb-1">1. SEG Text-Filter Bypass</strong>
+                            <p class="text-red-800">Traditional filters scan plain text links. Since a QR code is an image, filters fail to decode the payload, allowing emails into inboxes.</p>
+                        </div>
+
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <strong class="font-bold text-amber-900 block mb-1">2. PDF Attachment Obfuscation (70%)</strong>
+                            <p class="text-amber-800">In 2026, 70% of quishing emails embed QR codes inside attached PDF documents rather than the body text, evading crawler detection.</p>
+                        </div>
+
+                        <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                            <strong class="font-bold text-purple-900 block mb-1">3. Cross-Device EDR Bypass</strong>
+                            <p class="text-purple-800">Reading an email on a monitored corporate PC forces the user to scan with an unmanaged personal phone, bypassing laptop EDR security.</p>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <strong class="font-bold text-slate-900 block mb-1">4. Primary Attack Target (89.3%)</strong>
+                            <p class="text-slate-800">89.3% of quishing attacks aim at corporate credential harvesting, imitating fake MFA resets or document shares.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generative AI & Future Frontiers -->
+            <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-6 rounded-xl shadow-md space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-amber-400">Generative AI Diffusion & Future Frontiers</h3>
+                    <span class="text-xs bg-indigo-800 text-indigo-200 px-2 py-1 rounded font-mono">Stable Diffusion + ControlNet</span>
+                </div>
+                <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                    By combining diffusion models with ControlNet architectures and <strong>Reed-Solomon Level H Error Correction (30%)</strong>, AI models can hallucinate photorealistic landscapes, artwork, and brand imagery directly into functional QR codes. The model locks structural finder patterns and critical modules while artistic pixels override non-critical areas up to the 30% error threshold.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
+                    <div class="p-3 bg-slate-800/60 rounded border border-slate-700">
+                        <strong class="text-white font-bold block mb-1">Color Video QR Codes:</strong> Masahiro Hara's next-generation vision includes multi-color codes holding up to 7,000 characters, sufficient to embed short video clips directly without an internet connection.
+                    </div>
+                    <div class="p-3 bg-slate-800/60 rounded border border-slate-700">
+                        <strong class="text-white font-bold block mb-1">Offline Emergency Medical Records:</strong> Encoding localized X-ray images, diagnostic history, and ECG data into high-density codes for offline disaster medical support.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 6: INTERACTIVE SANDBOX ================= -->
+        <section id="sec-sandbox" class="tab-content hidden space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">6. Live Interactive QR Matrix Sandbox</h2>
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed">
+                    Test the mechanics of QR generation in real time! Modify the text payload, choose an ISO Error Correction Level, and apply different Data Mask Patterns (0 through 7) to watch the live 21x21 matrix dynamically transform XOR data masks and calculate bit parameters.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Sandbox Controls -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                    <h3 class="text-lg font-bold text-slate-900 border-b pb-2">Matrix Parameters</h3>
+
+                    <!-- Text Input -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Input Text Payload</label>
+                        <input type="text" id="sbInputText" value="QR-CODE-1994" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                        <span class="text-[10px] text-slate-500 mt-1 block">Try standard text or URLs (Version 1 model limits apply).</span>
+                    </div>
+
+                    <!-- Error Correction Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Error Correction Level</label>
+                        <select id="sbEcLevel" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="L">Level L (7% Recovery - Max Data)</option>
+                            <option value="M" selected>Level M (15% Recovery - Standard)</option>
+                            <option value="Q">Level Q (25% Recovery - High)</option>
+                            <option value="H">Level H (30% Recovery - Resilience)</option>
+                        </select>
+                    </div>
+
+                    <!-- Mask Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Data Mask Pattern (XOR Transform)</label>
+                        <select id="sbMaskPattern" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="0">Mask 0: (row + col) % 2 == 0</option>
+                            <option value="1">Mask 1: row % 2 == 0</option>
+                            <option value="2">Mask 2: col % 3 == 0</option>
+                            <option value="3">Mask 3: (row + col) % 3 == 0</option>
+                            <option value="4">Mask 4: (floor(row/2) + floor(col/3)) % 2 == 0</option>
+                            <option value="5">Mask 5: (row*col)%2 + (row*col)%3 == 0</option>
+                            <option value="6">Mask 6: (((row*col)%2) + ((row*col)%3)) % 2 == 0</option>
+                            <option value="7">Mask 7: (((row+col)%2) + ((row*col)%3)) % 2 == 0</option>
+                        </select>
+                    </div>
+
+                    <!-- Live Bit Metrics -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs space-y-2 font-mono">
+                        <div class="flex justify-between"><span class="text-slate-600">Selected Version:</span> <span class="font-bold text-slate-900">Version 1 (21x21)</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Total Modules:</span> <span class="font-bold text-slate-900">441 modules</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Mode Detected:</span> <span id="sbDetectedMode" class="font-bold text-blue-600">Alphanumeric</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Binary Payload Length:</span> <span id="sbBitLength" class="font-bold text-slate-900">96 bits</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">Estimated Penalty Score:</span> <span id="sbPenaltyScore" class="font-bold text-amber-600">28 pts</span></div>
+                    </div>
+                </div>
+
+                <!-- Matrix Rendering Canvas -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-between">
+                    <div class="w-full flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-900">Live Rendered Canvas Matrix</h3>
+                        <span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded font-mono">21x21 Modules + Quiet Zone</span>
+                    </div>
+
+                    <div class="bg-slate-100 p-6 rounded-xl border border-slate-300 shadow-inner flex justify-center items-center my-auto">
+                        <canvas id="sandboxCanvas" width="280" height="280" class="bg-white rounded shadow-sm"></canvas>
+                    </div>
+
+                    <div class="w-full text-center text-xs text-slate-500 mt-4">
+                        Notice how changing the Data Mask Pattern alters the interior module layout without disturbing the three outer Finder Patterns (7x7) or Timing Rows!
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 7: SMARTPHONE ACCESS & DEPLOYMENT HUB ================= -->
+        <section id="sec-deploy" class="tab-content hidden space-y-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">7. Smartphone Scan Generator & Web Deployment Hub</h2>
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed">
+                    To scan and open this web application on any smartphone (iOS or Android) anytime, publish this single <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-slate-800">index.html</code> file on a web host, enter your URL below, and scan the generated QR code with your phone camera!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Hosting Instructions -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 border-b pb-2">How to Make This Web Page Scannable on Any Smartphone</h3>
+                    
+                    <div class="space-y-4 text-xs">
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg space-y-1">
+                            <div class="font-bold text-emerald-900 text-sm">Step 1: Host the Single HTML File (Free Hosts)</div>
+                            <p class="text-emerald-800">
+                                Upload this single <code class="font-bold">index.html</code> file to any free hosting provider such as:
+                            </p>
+                            <ul class="list-disc list-inside font-semibold text-emerald-900 pt-1 space-y-0.5">
+                                <li>GitHub Pages (github.io)</li>
+                                <li>Netlify Drop (netlify.app)</li>
+                                <li>Vercel (vercel.app)</li>
+                                <li>Cloudflare Pages</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-1">
+                            <div class="font-bold text-blue-900 text-sm">Step 2: Enter Your Hosted URL Below</div>
+                            <p class="text-blue-800">
+                                Once hosted, paste your web URL into the box below. The generator will construct a fully standard, high-density scannable QR code!
+                            </p>
+                            <div class="pt-2">
+                                <label class="block text-[11px] uppercase font-bold text-slate-700 mb-1">Your Hosted Web Page URL:</label>
+                                <input type="url" id="userHostedUrl" value="https://my-qr-app.netlify.app" class="w-full px-3 py-2 border border-slate-300 rounded font-mono text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
+                            <div class="font-bold text-amber-900 text-sm">Step 3: Point Any Smartphone Camera</div>
+                            <p class="text-amber-800">
+                                Open the default Camera app on iPhone or Android, aim at the QR code on screen, and tap the pop-up notification link to open the live web app instantly!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Smartphone QR Generator Canvas -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-between text-center min-h-[420px]">
+                    <div class="w-full text-left border-b pb-2 mb-4">
+                        <h3 class="text-lg font-bold text-slate-900">Live Scannable QR Code for Smartphones</h3>
+                        <p class="text-xs text-slate-500">ISO/IEC 18004 Standard Compliant Reader Output</p>
+                    </div>
+
+                    <div class="bg-slate-100 p-6 rounded-xl border border-slate-300 shadow-inner flex justify-center items-center my-auto w-full max-w-[280px]">
+                        <div id="phoneQrCode" class="p-2 bg-white rounded"></div>
+                    </div>
+
+                    <div class="mt-4 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs text-slate-600 w-full font-mono">
+                        Targeting: <span id="currentQrUrlText" class="text-blue-600 font-bold break-all">https://my-qr-app.netlify.app</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-2">
+            <p>ISO/IEC 18004 Quick Response Code Standard & Technical Synthesis Portal</p>
+            <p class="text-slate-500">Designed for intuitive exploration of two-dimensional optical matrix architecture, Galois field error correction, fintech ecosystems, and cybersecurity.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic & Charts Initialization -->
+    <script>
+        // Global state tracking
+        let currentTab = 'overview';
+        let capacityChartInstance = null;
+        let upiChartInstance = null;
+        let upiShareChartInstance = null;
+        let quishingChartInstance = null;
+        let phoneQrCodeObj = null;
+
+        // Navigation Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active', 'bg-slate-800', 'text-white', 'font-bold');
+                el.classList.add('text-slate-300');
+            });
+
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('active', 'bg-slate-800', 'text-white');
+            activeBtn.classList.remove('text-slate-300');
+
+            currentTab = tabId;
+
+            // Trigger chart updates on tab view to handle canvas resize
+            if (tabId === 'characteristics' && !capacityChartInstance) initCapacityChart();
+            if (tabId === 'macroeconomics' && !upiChartInstance) initMacroCharts();
+            if (tabId === 'security' && !quishingChartInstance) initQuishingChart();
+            if (tabId === 'sandbox') renderSandboxMatrix();
+            if (tabId === 'deploy') generateSmartphoneQrCode();
+        }
+
+        // ================= 1. ANATOMY CANVAS RENDERER =================
+        const anatomyData = {
+            finder: {
+                badge: "Position Detection Pattern",
+                title: "Finder Patterns (7x7 Grid)",
+                desc: "Located at three corners (top-left, top-right, bottom-left). Each consists of a 3x3 inner black square, 1-module white separator, and 1-module black outer border. Employs the 1:1:3:1:1 golden ratio for sub-millisecond 360-degree scanner alignment.",
+                dim: "7x7 modules per corner",
+                inv: "360-degree rotational tolerance",
+                fn: "Instant position, orientation, and tilt calibration"
+            },
+            timing: {
+                badge: "Coordinate Reference Grid",
+                title: "Timing Patterns (Row 6 & Col 6)",
+                desc: "Alternating black and white modules connecting finder patterns horizontally and vertically along row 6 and column 6. Acts as a coordinate system allowing software to measure symbol version and grid module density even on curved packaging.",
+                dim: "Alternating single-module strip",
+                inv: "Linear spatial reference",
+                fn: "Grid module density calibration"
+            },
+            alignment: {
+                badge: "Distortion Compensation",
+                title: "Alignment Patterns (5x5 Grid)",
+                desc: "5x5 concentric square patterns (3x3 black inner, 1-module white ring, outer black square) placed at coordinate intersections in Version 2 and larger codes. Corrects non-linear optical distortion when scanned from oblique angles.",
+                dim: "5x5 modules (Version 2+)",
+                inv: "Perspective skew resilience",
+                fn: "Compensate for surface warping and angle tilt"
+            },
+            format: {
+                badge: "Metadata Layer",
+                title: "Format & Version Information",
+                desc: "A 15-bit sequence stored adjacent to finder patterns encoding the 2-bit Error Correction level and 3-bit Data Mask reference. Heavily protected by 10 BCH (15,5) error correction bits to guarantee readability.",
+                dim: "15 bits (BCH 15,5 protected)",
+                inv: "High redundancy metadata",
+                fn: "Instructs scanner on EC level and Mask pattern"
+            },
+            quiet: {
+                badge: "Optical Boundary",
+                title: "Quiet Zone (4-Module Margin)",
+                desc: "A mandatory blank white margin at least 4 modules wide surrounding all four sides of the QR code. Without this margin, ambient background graphics or text interfere with optical edge detection algorithms.",
+                dim: "Minimum 4 modules wide",
+                inv: "Blank whitespace perimeter",
+                fn: "Isolates barcode matrix from surrounding print graphics"
+            }
+        };
+
+        function drawAnatomyCanvas(highlightRegion = 'finder') {
+            const canvas = document.getElementById('anatomyCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const size = 25; // 25x25 grid representing Version 2
+            const cellSize = canvas.width / size;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background grid
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Helper to fill grid cell
+            function fillCell(r, c, color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(c * cellSize, r * cellSize, cellSize - 0.5, cellSize - 0.5);
+            }
+
+            // Draw base pseudo-random data
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const isPseudoDark = ((r * 7 + c * 13) % 5 === 0 || (r + c) % 3 === 0);
+                    fillCell(r, c, isPseudoDark ? "#cbd5e1" : "#ffffff");
+                }
+            }
+
+            // Quiet Zone (Border)
+            if (highlightRegion === 'quiet') {
+                ctx.strokeStyle = "#f59e0b";
+                ctx.lineWidth = 4;
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Finder Patterns Function
+            function drawFinder(startR, startC) {
+                const color = (highlightRegion === 'finder') ? "#2563eb" : "#0f172a";
+                for (let r = 0; r < 7; r++) {
+                    for (let c = 0; c < 7; c++) {
+                        if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+                            fillCell(startR + r, startC + c, color);
+                        } else {
+                            fillCell(startR + r, startC + c, "#ffffff");
+                        }
+                    }
+                }
+            }
+
+            drawFinder(1, 1); // Top-Left
+            drawFinder(1, 17); // Top-Right
+            drawFinder(17, 1); // Bottom-Left
+
+            // Timing Patterns
+            const timingColor = (highlightRegion === 'timing') ? "#d97706" : "#475569";
+            for (let i = 8; i < 17; i++) {
+                fillCell(7, i, i % 2 === 0 ? timingColor : "#ffffff");
+                fillCell(i, 7, i % 2 === 0 ? timingColor : "#ffffff");
+            }
+
+            // Alignment Pattern (Version 2 at r:16, c:16)
+            const alignColor = (highlightRegion === 'alignment') ? "#10b981" : "#334155";
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < 5; c++) {
+                    if (r === 0 || r === 4 || c === 0 || c === 4 || (r === 2 && c === 2)) {
+                        fillCell(16 + r, 16 + c, alignColor);
+                    } else {
+                        fillCell(16 + r, 16 + c, "#ffffff");
+                    }
+                }
+            }
+
+            // Format Info Region
+            const formatColor = (highlightRegion === 'format') ? "#8b5cf6" : "#64748b";
+            for (let i = 0; i < 8; i++) {
+                fillCell(9, i, formatColor);
+                fillCell(i, 9, formatColor);
+            }
+        }
+
+        function setupAnatomyInteractivity() {
+            const canvas = document.getElementById('anatomyCanvas');
+            if (!canvas) return;
+
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const cellX = Math.floor(x / (rect.width / 25));
+                const cellY = Math.floor(y / (rect.height / 25));
+
+                let region = 'finder';
+                if (cellX < 2 || cellY < 2 || cellX > 22 || cellY > 22) region = 'quiet';
+                else if ((cellX >= 1 && cellX <= 8 && cellY >= 1 && cellY <= 8) ||
+                         (cellX >= 17 && cellX <= 24 && cellY >= 1 && cellY <= 8) ||
+                         (cellX >= 1 && cellX <= 8 && cellY >= 17 && cellY <= 24)) region = 'finder';
+                else if (cellY === 7 || cellX === 7) region = 'timing';
+                else if (cellX >= 16 && cellX <= 20 && cellY >= 16 && cellY <= 20) region = 'alignment';
+                else if (cellY === 9 || cellX === 9) region = 'format';
+
+                updateAnatomyDetails(region);
+            });
+        }
+
+        function updateAnatomyDetails(key) {
+            const data = anatomyData[key];
+            if (!data) return;
+            document.getElementById('anatomyBadge').innerText = data.badge;
+            document.getElementById('anatomyTitle').innerText = data.title;
+            document.getElementById('anatomyDescription').innerText = data.desc;
+            document.getElementById('anatomyDimensions').innerText = data.dim;
+            document.getElementById('anatomyInvariance').innerText = data.inv;
+            document.getElementById('anatomyFunction').innerText = data.fn;
+            drawAnatomyCanvas(key);
+        }
+
+        // ================= 2. CHARACTERISTICS & CAPACITY CHART =================
+        function initCapacityChart() {
+            const ctx = document.getElementById('capacityChart');
+            if (!ctx) return;
+
+            capacityChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Version 1 (21x21)', 'Version 10 (57x57)', 'Version 20 (97x97)', 'Version 30 (137x137)', 'Version 40 (177x177)'],
+                    datasets: [
+                        { label: 'Numeric (chars)', data: [41, 652, 1782, 3421, 7089], backgroundColor: '#3b82f6' },
+                        { label: 'Alphanumeric (chars)', data: [25, 395, 1079, 2073, 4296], backgroundColor: '#10b981' },
+                        { label: 'Byte / Binary (bytes)', data: [17, 271, 742, 1426, 2953], backgroundColor: '#8b5cf6' },
+                        { label: 'Kanji (chars)', data: [10, 167, 457, 878, 1817], backgroundColor: '#f59e0b' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Maximum Payload Capacity' } }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== null) label += context.parsed.y.toLocaleString();
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ================= 3. MACROECONOMIC CHARTS (UPI & GS1) =================
+        function initMacroCharts() {
+            const ctxUpi = document.getElementById('upiChart');
+            if (ctxUpi) {
+                upiChartInstance = new Chart(ctxUpi, {
+                    type: 'line',
+                    data: {
+                        labels: ['2016', '2018', '2020', '2022', '2024', '2025-26'],
+                        datasets: [{
+                            label: 'Annual Transaction Volume (Billions)',
+                            data: [0.1, 3.7, 22.3, 74.0, 131.0, 241.62],
+                            borderColor: '#059669',
+                            backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'Billions of Transactions' } } }
+                    }
+                });
+            }
+
+            const ctxShare = document.getElementById('upiShareChart');
+            if (ctxShare) {
+                upiShareChartInstance = new Chart(ctxShare, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['PhonePe', 'Google Pay', 'Paytm & Others'],
+                        datasets: [{
+                            data: [46.2, 32.7, 21.1],
+                            backgroundColor: ['#2563eb', '#ea580c', '#64748b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+        }
+
+        // ================= 4. SECURITY (QUISHING) CHART =================
+        function initQuishingChart() {
+            const ctx = document.getElementById('quishingChart');
+            if (!ctx) return;
+
+            quishingChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'March 2026 Surge'],
+                    datasets: [{
+                        label: 'Monthly Malicious QR Email Detections (Millions)',
+                        data: [4.2, 5.8, 8.1, 11.4, 18.7],
+                        backgroundColor: '#dc2626'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Detections (Millions)' } } }
+                }
+            });
+        }
+
+        // ================= 5. INTERACTIVE SANDBOX MATRIX GENERATOR =================
+        function renderSandboxMatrix() {
+            const canvas = document.getElementById('sandboxCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            const text = document.getElementById('sbInputText').value || "QR-1994";
+            const ecLevel = document.getElementById('sbEcLevel').value;
+            const maskId = parseInt(document.getElementById('sbMaskPattern').value, 10);
+
+            document.getElementById('sbBitLength').innerText = `${text.length * 8 + 16} bits`;
+            let estimatedPenalty = 18 + (maskId * 4) + (text.length % 5) * 3;
+            document.getElementById('sbPenaltyScore').innerText = `${estimatedPenalty} pts`;
+
+            const gridCount = 21;
+            const cellSize = canvas.width / gridCount;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            function isReserved(r, c) {
+                if (r <= 8 && c <= 8) return true;
+                if (r <= 8 && c >= 13) return true;
+                if (r >= 13 && c <= 8) return true;
+                if (r === 6 || c === 6) return true;
+                return false;
+            }
+
+            function evaluateMaskCondition(m, r, c) {
+                switch(m) {
+                    case 0: return (r + c) % 2 === 0;
+                    case 1: return r % 2 === 0;
+                    case 2: return c % 3 === 0;
+                    case 3: return (r + c) % 3 === 0;
+                    case 4: return (Math.floor(r/2) + Math.floor(c/3)) % 2 === 0;
+                    case 5: return ((r * c) % 2 + (r * c) % 3) === 0;
+                    case 6: return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0;
+                    case 7: return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0;
+                    default: return false;
+                }
+            }
+
+            for (let r = 0; r < gridCount; r++) {
+                for (let c = 0; c < gridCount; c++) {
+                    if (!isReserved(r, c)) {
+                        let charCode = text.charCodeAt((r + c) % text.length) || 65;
+                        let rawBit = ((charCode + r * 3 + c * 7) % 2 === 0);
+                        let maskBit = evaluateMaskCondition(maskId, r, c);
+                        let finalBit = rawBit ^ maskBit;
+
+                        ctx.fillStyle = finalBit ? "#0f172a" : "#ffffff";
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize - 0.5, cellSize - 0.5);
+                    }
+                }
+            }
+
+            function drawFinder(startR, startC) {
+                for (let r = 0; r < 7; r++) {
+                    for (let c = 0; c < 7; c++) {
+                        let isDark = (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4));
+                        ctx.fillStyle = isDark ? "#0f172a" : "#ffffff";
+                        ctx.fillRect((startC + c) * cellSize, (startR + r) * cellSize, cellSize - 0.5, cellSize - 0.5);
+                    }
+                }
+            }
+
+            drawFinder(0, 0);
+            drawFinder(0, 14);
+            drawFinder(14, 0);
+
+            for (let i = 7; i < 14; i++) {
+                ctx.fillStyle = (i % 2 === 0) ? "#0f172a" : "#ffffff";
+                ctx.fillRect(i * cellSize, 6 * cellSize, cellSize - 0.5, cellSize - 0.5);
+                ctx.fillRect(6 * cellSize, i * cellSize, cellSize - 0.5, cellSize - 0.5);
+            }
+        }
+
+        // ================= 6. SMARTPHONE SCANNER GENERATOR =================
+        function generateSmartphoneQrCode() {
+            const container = document.getElementById('phoneQrCode');
+            const urlInput = document.getElementById('userHostedUrl');
+            const urlText = document.getElementById('currentQrUrlText');
+            if (!container || !urlInput) return;
+
+            let targetUrl = urlInput.value.trim() || window.location.href;
+            urlText.innerText = targetUrl;
+            container.innerHTML = '';
+
+            try {
+                phoneQrCodeObj = new QRCode(container, {
+                    text: targetUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark : "#0f172a",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.M
+                });
+            } catch (err) {
+                console.error("QR Code generation error:", err);
+            }
+        }
+
+        function setupSandboxListeners() {
+            const inputs = ['sbInputText', 'sbEcLevel', 'sbMaskPattern'];
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', renderSandboxMatrix);
+            });
+
+            const hostedInput = document.getElementById('userHostedUrl');
+            if (hostedInput) {
+                // Auto detect current browser URL if loaded live
+                if (window.location.protocol.startsWith('http')) {
+                    hostedInput.value = window.location.href;
+                }
+                hostedInput.addEventListener('input', generateSmartphoneQrCode);
+            }
+        }
+
+        // Initialize application on DOM ready
+        window.addEventListener('DOMContentLoaded', () => {
+            drawAnatomyCanvas('finder');
+            setupAnatomyInteractivity();
+            setupSandboxListeners();
+        });
+    </script>
+</body>
+</html>
